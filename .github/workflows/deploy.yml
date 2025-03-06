@@ -1,0 +1,41 @@
+name: Deploy nonton.fly.dev
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Setup Fly
+      uses: superfly/flyctl-actions/setup-flyctl@master
+      
+    - name: Deploy
+      env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          JELLYFIN_API_KEY: ${{ secrets.JELLYFIN_API_KEY }}
+          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+          SONARR_API_KEY: ${{ secrets.SONARR_API_KEY }}
+          RADARR_API_KEY: ${{ secrets.RADARR_API_KEY }}
+          BAZARR_API_KEY: ${{ secrets.BAZARR_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+          QBITTORRENT_WEBUI_PASSWORD: ${{ secrets.QBITTORRENT_WEBUI_PASSWORD }}
+      run: |
+          flyctl deploy --remote-only \
+            --build-arg JELLYFIN_API_KEY="$JELLYFIN_API_KEY" \
+            --build-arg RCLONE_CONFIG="$RCLONE_CONFIG" \
+            --build-arg SONARR_API_KEY="$SONARR_API_KEY" \
+            --build-arg RADARR_API_KEY="$RADARR_API_KEY" \
+            --build-arg BAZARR_API_KEY="$BAZARR_API_KEY" \
+            --build-arg TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
+            --build-arg TAILSCALE_AUTHKEY="$TAILSCALE_AUTHKEY" \
+            --build-arg QBITTORRENT_WEBUI_PASSWORD="$QBITTORRENT_WEBUI_PASSWORD"
