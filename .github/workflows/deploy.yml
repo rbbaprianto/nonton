@@ -30,7 +30,8 @@ jobs:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
           QBITTORRENT_WEBUI_PASSWORD: ${{ secrets.QBITTORRENT_WEBUI_PASSWORD }}
       run: |
-          flyctl deploy --remote-only \
+          flyctl deploy --app nonton --remote-only \
+            --build-arg SKIP_API_KEYS=true
             --build-arg JELLYFIN_API_KEY="$JELLYFIN_API_KEY" \
             --build-arg RCLONE_CONFIG="$RCLONE_CONFIG" \
             --build-arg SONARR_API_KEY="$SONARR_API_KEY" \

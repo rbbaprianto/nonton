@@ -38,3 +38,9 @@ RUN chmod +x /scripts/*.sh && \
 EXPOSE 443 8080
 
 CMD ["/scripts/start.sh"]
+
+# Tambahkan di bagian RUN untuk SSL
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/ssl/certs/key.pem \
+  -out /etc/ssl/certs/cert.pem \
+  -subj "/C=ID/ST=Jakarta/L=Jakarta/O=Nonton/CN=nonton.fly.dev"
