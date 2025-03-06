@@ -1,0 +1,5 @@
+<Config>
+  <ApiKey>${RADARR_API_KEY}</ApiKey>
+  <UrlBase>/radarr</UrlBase>
+  <Port>7878</Port>
+</Config>

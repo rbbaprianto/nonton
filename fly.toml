@@ -1,0 +1,19 @@
+app = "nonton"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+  build_args = [
+    "JELLYFIN_API_KEY",
+    "RCLONE_CONFIG",
+    "SONARR_API_KEY",
+    "RADARR_API_KEY",
+    "BAZARR_API_KEY",
+    "TELEGRAM_BOT_TOKEN",
+    "TAILSCALE_AUTHKEY",
+    "QBITTORRENT_WEBUI_PASSWORD"
+  ]
+
+[http_service]
+  internal_port = 443
+  force_https = true
