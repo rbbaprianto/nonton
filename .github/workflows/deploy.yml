@@ -27,7 +27,7 @@ jobs:
             
             const currentRunId = context.runId;
             const sortedRuns = runs.workflow_runs.sort((a, b) => b.id - a.id);
-            const runsToDelete = sortedRuns.slice(5);
+            const runsToDelete = sortedRuns.slice(1);
             
             for (const run of runsToDelete) {
               if (run.id !== currentRunId && run.status !== 'in_progress') {
