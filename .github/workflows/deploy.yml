@@ -117,7 +117,7 @@ jobs:
             -d text="🚀 *Deployment Success*
 ✅ App: ${{ env.APP_NAME }}
 🌐 URL: $DEPLOY_URL
-🕒 $(date +'%Y-%m-%d %H:%M:%S %Z')" \
+🕒 $(date +'\%Y-\%m-\%d \%H:\%M:\%S \%Z') \
             -d parse_mode="Markdown"
 
       - name: Send Failure Notification
