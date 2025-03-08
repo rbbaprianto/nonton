@@ -11,6 +11,10 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-24.04
+    # Tambahkan permissions di level job
+    permissions:
+      contents: write
+      secrets: write
     steps:
       - uses: actions/checkout@v4
       
@@ -36,17 +40,30 @@ jobs:
             echo "NEW_SECRETS=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Save Secrets
-        if: steps.secrets.outputs.NEW_SECRETS == 'true'
+      - name: Save Encryption Password
+        if: steps.generate-password.outputs.NEW_PASSWORD
         uses: actions/github-script@v7
         with:
           script: |
+            const { data: publicKey } = await github.rest.actions.getRepoPublicKey({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const messageBytes = Buffer.from('${{ env.ENCRYPTION_PASSWORD }}');
+            const keyBytes = Buffer.from(publicKey.key, 'base64');
+            const encryptedBytes = sodium.seal(messageBytes, keyBytes);
+            const encrypted = Buffer.from(encryptedBytes).toString('base64');
+
             await github.rest.actions.createOrUpdateRepoSecret({
               owner: context.repo.owner,
               repo: context.repo.repo,
               secret_name: 'ENCRYPTION_PASSWORD',
-              encrypted_value: Buffer.from('${{ env.ENCRYPTION_PASSWORD }}').toString('base64')
-            })
+              encrypted_value: encrypted,
+              key_id: publicKey.key_id,
+            });
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Gunakan PAT bukan GITHUB_TOKEN
 
       - name: Deploy
         env:
