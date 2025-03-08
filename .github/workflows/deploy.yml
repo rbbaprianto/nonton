@@ -5,32 +5,17 @@ on:
     branches: [main]
 
 jobs:
-  cleanup_workflows:
-    name: Cleanup Old Workflows
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Delete old workflow runs
-        uses: dev-drprasad/delete-workflow-runs@v0.2.0
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          keep_last: 1  # Menyimpan 1 workflow terbaru
-          older_than_days: 0
-          delete_all_but_latest: true
-
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Fly
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: actions/checkout@v4
 
-      - name: Create App if Not Exists
+      - name: Setup Fly
+        uses: superfly/flyctl-actions@v2
+        with:
+          flyctl-version: "latest"
+
+      - name: Create App
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
@@ -39,21 +24,38 @@ jobs:
               --name nonton \
               --org personal
           fi
+          echo "primary_region = \"sin\"" >> fly.toml
 
-      - name: Deploy App
+      - name: Deploy
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          JELLYFIN_API_KEY: ${{ secrets.JELLYFIN_API_KEY }}
-          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-          SONARR_API_KEY: ${{ secrets.SONARR_API_KEY }}
-          RADARR_API_KEY: ${{ secrets.RADARR_API_KEY }}
-          BAZARR_API_KEY: ${{ secrets.BAZARR_API_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-          QBITTORRENT_WEBUI_PASSWORD: ${{ secrets.QBITTORRENT_WEBUI_PASSWORD }}
-        run: |
-          flyctl deploy \
-            --app nonton \
-            --remote-only \
-            --strategy immediate \
-            --verbose
+        run: flyctl deploy --app nonton --remote-only --verbose
+
+  cleanup:
+    needs: deploy
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Cleanup Workflows
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: runs } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: context.workflow,
+              per_page: 100
+            });
+            
+            const keep = 5;
+            const toDelete = runs.workflow_runs.slice(keep);
+            
+            for (const run of toDelete) {
+              await github.rest.actions.deleteWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id
+              });
+              console.log(`Deleted run ${run.id}`);
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
