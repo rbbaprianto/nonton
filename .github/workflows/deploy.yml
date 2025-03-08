@@ -5,6 +5,24 @@ on:
     branches: [main]
 
 jobs:
+  cleanup_workflows:
+    name: Cleanup Old Workflows
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Delete old workflow runs
+        uses: dev-drprasad/delete-workflow-runs@v0.2.0
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          keep_last: 1  # Menyimpan 1 workflow terbaru
+          older_than_days: 0
+          delete_all_but_latest: true
+
   deploy:
     runs-on: ubuntu-latest
     steps:
@@ -41,21 +59,3 @@ jobs:
             --remote-only \
             --strategy immediate \
             --verbose
-
-  cleanup_workflows:
-    name: Cleanup Old Workflows
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Delete old workflow runs
-        uses: dev-drprasad/delete-workflow-runs@v0.2.0
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          keep_last: 1  # Menyimpan 1 workflow terbaru
-          older_than_days: 0
-          delete_all_but_latest: true
