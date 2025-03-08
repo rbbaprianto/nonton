@@ -1,3 +1,5 @@
 <Config>
+  <ApiKey>{{SONARR_API_KEY}}</ApiKey>
   <UrlBase>/sonarr</UrlBase>
+  <Port>8989</Port>
 </Config>
