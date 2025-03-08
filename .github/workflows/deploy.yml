@@ -37,8 +37,7 @@ jobs:
           if ! flyctl apps list | grep -q "nonton"; then
             flyctl apps create nonton \
               --name nonton \
-              --org personal \
-              --region sin
+              --org personal
           fi
 
       - name: Deploy App
