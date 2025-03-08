@@ -72,6 +72,9 @@ jobs:
             echo "NEW_SECRETS=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Setup Sodium
+        run: npm install sodium
+
       - name: Save Secrets
         if: steps.secrets.outputs.NEW_SECRETS == 'true'
         uses: actions/github-script@v7
@@ -82,7 +85,8 @@ jobs:
               repo: context.repo.repo,
             });
 
-            const messageBytes = Buffer.from('${{ env.ENCRYPTION_PASSWORD }}');
+            const message = process.env.SECRET_VALUE;
+            const messageBytes = Buffer.from(message);
             const keyBytes = Buffer.from(publicKey.key, 'base64');
             const encryptedBytes = sodium.seal(messageBytes, keyBytes);
             const encrypted = Buffer.from(encryptedBytes).toString('base64');
@@ -96,9 +100,7 @@ jobs:
             });
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-
-      - name: Setup Sodium
-        run: npm install sodium
+          SECRET_VALUE: ${{ env.ENCRYPTION_PASSWORD }}
 
       - name: Deploy
         env:
