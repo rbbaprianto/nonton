@@ -7,7 +7,6 @@ on:
 jobs:
   cleanup_workflows:
     name: Cleanup Old Workflows
-    needs: deploy
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     
