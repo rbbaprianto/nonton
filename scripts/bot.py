@@ -1,27 +1,41 @@
 import os
-import requests
-import logging
+import subprocess
+from telegram import Update, Bot
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Command Handlers
+async def status(update: Update, _):
+    result = subprocess.run(["flyctl", "status", "-a", "nonton"], capture_output=True)
+    await update.message.reply_text(f"`{result.stdout.decode()}`", parse_mode="Markdown")
 
-def send_telegram(message: str):
-    token = os.getenv('TELEGRAM_BOT_TOKEN')
-    chat_id = os.getenv('TELEGRAM_CHAT_ID')
+async def disk_usage(update: Update, _):
+    result = subprocess.run(["df", "-h", "/film"], capture_output=True)
+    await update.message.reply_text(f"`{result.stdout.decode()}`", parse_mode="Markdown")
+
+async def extend_storage(update: Update, context):
+    size = context.args[0]
+    chat_id = update.message.chat.id
+    if int(size) < 10:
+        await update.message.reply_text("❌ Minimum extension is 10GB")
+        return
     
-    try:
-        response = requests.post(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            json={
-                "chat_id": chat_id,
-                "text": message,
-                "parse_mode": "HTML"
-            }
-        )
-        response.raise_for_status()
-        logger.info("Notification sent successfully")
-    except Exception as e:
-        logger.error(f"Failed to send notification: {str(e)}")
+    # Trigger GitHub Action
+    subprocess.run([
+        "gh", "workflow", "run", "volume.yml",
+        "-f", f"action=extend",
+        "-f", f"size={size}"
+    ])
+    
+    await update.message.reply_text(f"✅ Extending storage by {size}GB...")
+
+def main():
+    app = Application.builder().token(os.getenv('TELEGRAM_BOT_TOKEN')).build()
+    
+    app.add_handler(CommandHandler("status", status))
+    app.add_handler(CommandHandler("disk", disk_usage))
+    app.add_handler(CommandHandler("extend_storage", extend_storage))
+    
+    app.run_polling()
 
 if __name__ == "__main__":
-    send_telegram("🔄 Nonton Server is running!")
+    main()
