@@ -70,33 +70,33 @@ jobs:
 
           # Generate fly.toml (HAPUS DUPLIKASI)
           cat <<EOF > fly.toml
-app = "${{ env.APP_NAME }}"
-primary_region = "${{ env.PRIMARY_REGION }}"
+          app = "${{ env.APP_NAME }}"
+          primary_region = "${{ env.PRIMARY_REGION }}"
 
-[build]
-  dockerfile = "Dockerfile"
-  build_args = ["ENCRYPTION_PWD"]
+          [build]
+            dockerfile = "Dockerfile"
+            build_args = ["ENCRYPTION_PWD"]
 
-[mounts]
-  source = "film_volume"
-  destination = "/film"
-  initial_size = "10gb"
+          [mounts]
+            source = "film_volume"
+            destination = "/film"
+            initial_size = "10gb"
 
-[http_service]
-  internal_port = 80
-  force_https = true
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 1
+          [http_service]
+            internal_port = 80
+            force_https = true
+            auto_stop_machines = true
+            auto_start_machines = true
+            min_machines_running = 1
 
-[[http_service.ports]]
-  handlers = ["http"]
-  port = 80
+          [[http_service.ports]]
+            handlers = ["http"]
+            port = 80
 
-[[http_service.ports]]
-  handlers = ["tls", "http"]
-  port = 443
-EOF
+          [[http_service.ports]]
+            handlers = ["tls", "http"]
+            port = 443
+          EOF
 
       - name: Generate and Store Secrets
         env:
