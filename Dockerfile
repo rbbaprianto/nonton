@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-#ARG ENCRYPTION_PWD
+ARG ENCRYPTION_PWD
 ENV ENCRYPTION_PWD=$ENCRYPTION_PWD
 
 # Install dependencies dan tambahkan repository
@@ -99,12 +99,9 @@ RUN chmod +x /scripts/* && \
 # Expose port yang diperlukan
 EXPOSE 80 443 8080 3478 41641/udp
 
-# Flyctl authentication
-ENV FLYCTL_INSTALL="/root/.fly"
-ENV PATH="$FLYCTL_INSTALL/bin:$PATH"
-# ✅ BENAR
-ENV FLY_API_TOKEN=$FLY_API_TOKEN
-RUN flyctl auth token --check
+# Install flyctl
+RUN curl -L https://fly.io/install.sh | FLYCTL_INSTALL=/usr/local sh
+ENV PATH="/usr/local/bin:${PATH}"
 
 # Entrypoint untuk handling shutdown
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
