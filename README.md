@@ -1,95 +1,161 @@
-```markdown
-# Nonton Media Server
+# 🎬 Nonton - All-in-One Media Server Platform
 
-Media server stack terintegrasi untuk streaming, manajemen konten, dan otomasi unduhan. Deploy otomatis ke Fly.io dengan Docker.
+![Deployment Status](https://img.shields.io/github/actions/workflow/status/rbbaprianto/nonton/deploy.yml?branch=main&label=Deployment)
+![Fly.io](https://img.shields.io/badge/Fly.io-Deployed-8A2BE2)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED)
+![License](https://img.shields.io/badge/License-MIT-brightgreen)
 
-## Komponen Utama
+**Nonton** adalah platform media server lengkap untuk streaming, manajemen konten, dan otomasi unduhan.  
+Dibangun menggunakan **Docker** dan dideploy ke **Fly.io** dengan sistem keamanan yang solid.
 
-### Core Services
-- **Jellyfin** (`:8096`) - Streaming media
-- **qBittorrent** (`:8080`) - Torrent client
-- **Aria2** - Download client HTTP/FTP
-- **Sonarr** (`:8989`) - Manajemen series TV
-- **Radarr** (`:7878`) - Manajemen film
-- **Bazarr** (`:6767`) - Manajemen subtitle
+🔗 **Demo Live**: [nonton.fly.dev](https://nonton.fly.dev) *(akses terbatas)*
 
-### Infrastruktur
-- **Nginx** - Reverse proxy + SSL
-- **Tailscale** - Koneksi VPN
-- **Supervisord** - Process manager
-- **Fly.io** - Deployment platform
+## 🌟 Fitur Utama
 
-## Persyaratan
+### 🎥 Media Management
+- **Jellyfin** → Media server dengan hardware acceleration  
+- **Sonarr** → Otomasi manajemen serial TV  
+- **Radarr** → Otomasi manajemen film  
+- **Bazarr** → Manajemen subtitle otomatis  
+- **File Browser** → Pengelolaan file berbasis web  
 
-### GitHub Secrets
-| Secret Name               | Contoh Value                     |
-|---------------------------|----------------------------------|
-| `FLY_API_TOKEN`           | `fly_xxxx`                       |
-| `TAILSCALE_AUTHKEY`       | `tskey-auth-xxxx`                |
-| `TELEGRAM_BOT_TOKEN`      | `123456:ABC-DEF1234ghIkl-zyx57W2`|
-| `TELEGRAM_CHAT_ID`        | `-1001234567890`                 |
+### 📥 Download Management
+- **qBittorrent** → Torrent client dengan WebUI  
+- **Aria2** → Download client multi-protokol  
+- **Prowlarr** → Indexer manager untuk *Arr stack  
 
-## Struktur File
-```
-.
-├── config/
-│   ├── nginx/jellyfin.conf
-│   ├── jellyfin/config.json
-│   ├── sonarr/config.xml
-│   ├── radarr/config.xml
-│   └── supervisord.conf
-├── scripts/
-│   ├── start.sh
-│   └── send_keys.py
-├── Dockerfile
-└── fly.toml
-```
+### 🔐 Monitoring & Security
+- **Tailscale** → VPN mesh untuk akses internal  
+- **Netdata** → Pemantauan sistem secara real-time  
+- **Uptime Kuma** → Monitoring uptime & status  
+- **Auto-Enkripsi** → API keys terenkripsi AES-256  
 
-## Deployment
-1. Clone repository:
+### ⚙️ Otomasi
+- **GitHub Actions** → CI/CD pipeline otomatis  
+- **Telegram Bot** → Notifikasi real-time  
+- **Auto-Healing** → Restart layanan otomatis jika terjadi error  
+
+## 🚀 Cara Deploy
+
+### 🧰 Prasyarat
+✅ Akun [Fly.io](https://fly.io) dengan token API  
+✅ Akun [Tailscale](https://tailscale.com) dengan auth key  
+✅ Bot Telegram dari [@BotFather](https://t.me/BotFather)  
+
+### ⚙️ Langkah 1 - Setup GitHub Secrets
+Buka repo Anda → **Settings → Secrets and variables → Actions**  
+Tambahkan data berikut:
+
+- `FLY_API_TOKEN` → Token Fly.io (dapatkan via `flyctl auth token`)  
+- `TAILSCALE_AUTHKEY` → Auth key Tailscale  
+- `TELEGRAM_BOT_TOKEN` → Token bot Telegram  
+- `TELEGRAM_CHAT_ID` → ID chat Telegram Anda  
+- `ENCRYPTION_PASSWORD` → Kosongkan (akan di-generate otomatis)  
+
+### 🚢 Langkah 2 - Deploy ke Fly.io
 ```bash
 git clone https://github.com/rbbaprianto/nonton.git
 cd nonton
-```
-
-2. Push ke Fly.io:
-```bash
 git push origin main
 ```
 
-Proses otomatis akan:
-1. Build Docker image
-2. Generate API keys terenkripsi
-3. Konfigurasi reverse proxy
-4. Kirim notifikasi ke Telegram
+Proses otomatis akan:  
+✅ Membuat aplikasi di Fly.io  
+✅ Build Docker image  
+✅ Generate API keys & enkripsi  
+✅ Kirim notifikasi ke Telegram  
 
-## Manajemen
+## 🔧 Konfigurasi Lanjutan
 
-### Perintah Fly.io
+### 📂 Struktur File
+```bash
+.
+├── config/
+│   ├── nginx/            # Reverse proxy config
+│   ├── jellyfin/         # Jellyfin config + SSL
+│   ├── sonarr/           # Sonarr config
+│   ├── radarr/           # Radarr config
+│   └── supervisord.conf  # Process manager
+├── scripts/
+│   ├── start.sh          # Init script
+│   └── send_keys.py      # Telegram notifier
+└── fly.toml              # Fly.io config
+```
+
+### 🌐 Custom Domain
+1. Tambahkan domain di Fly.io:
+```bash
+flyctl certs add yourdomain.com
+```
+2. Update `config/nginx/jellyfin.conf`:
+```nginx
+server_name yourdomain.com;
+```
+
+## 🛠️ Manajemen Layanan
+
+### Perintah Dasar
 ```bash
 # Masuk ke container
 flyctl ssh console -a nonton
 
-# Lihat logs
-flyctl logs -a nonton
+# Restart service
+flyctl apps restart nonton
 
 # Scale resources
 flyctl scale memory 2048 -a nonton
 ```
 
-### Environment Variables
-| Variable               | Contoh Value               |
-|------------------------|----------------------------|
-| `JELLYFIN_API_KEY`     | `d3b07384d113edec49...`    |
-| `RADARR_API_KEY`       | `c157a79031e1c40f...`      |
-| `ENCRYPTION_PASSWORD`  | `aes256-encrypted-secret`  |
+### Monitoring
+```bash
+# Lihat logs real-time
+flyctl logs -a nonton
 
-## Keamanan
-- API keys dienkripsi dengan AES-256
-- Notifikasi Telegram untuk aktivitas kritis
-- Tailscale VPN untuk akses internal
-- Auto-healing dengan Supervisord
+# Cek status aplikasi
+flyctl status -a nonton
 
-## Lisensi
-MIT License
+# Monitoring resource
+flyctl monitor -a nonton
 ```
+
+## 🔒 Keamanan
+
+### 🔐 Enkripsi Data
+- **API Keys** dihasilkan otomatis saat deploy pertama  
+- Dienkripsi dengan **AES-256-CBC**  
+- Dikirim via Telegram sebagai file `.enc`  
+
+### ⚠️ Best Practices
+1. Rotate API keys tiap 90 hari:
+```bash
+flyctl secrets set JELLYFIN_API_KEY=$(uuidgen) -a nonton
+```
+2. Update password secara berkala:
+```bash
+flyctl secrets set QBITTORRENT_WEBUI_PASSWORD="password_baru" -a nonton
+```
+
+## 🚨 Troubleshooting
+
+**Deployment Gagal**  
+✅ Pastikan semua secrets sudah terisi  
+✅ Cek kuota Fly.io  
+✅ Verifikasi Dockerfile bisa build secara lokal  
+
+**Service Tidak Muncul**  
+✅ Cek logs via `flyctl logs`  
+✅ Verifikasi port mapping di `fly.toml`  
+✅ Pastikan resource cukup (minimal 1GB RAM)  
+
+**Notifikasi Telegram Tidak Masuk**  
+✅ Verifikasi token bot  
+✅ Pastikan chat ID benar  
+✅ Cek firewall blocking Telegram API  
+
+## 🤝 Kontribusi
+
+Terbuka untuk issue dan pull request!  
+Lihat [CONTRIBUTING.md](.github/CONTRIBUTING.md) untuk panduan lengkap.
+
+## 📜 Lisensi
+Proyek ini menggunakan lisensi [MIT](LICENSE).
