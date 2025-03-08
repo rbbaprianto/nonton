@@ -103,6 +103,18 @@ jobs:
             port = 443
           EOF
 
+      - name: Set Fly.io Secrets
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl secrets set \
+            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }} \
+            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
+            TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }} \
+            ENCRYPTION_PASSWORD=${{ secrets.ENCRYPTION_PASSWORD }} \
+            JELLYFIN_API_KEY=${{ secrets.JELLYFIN_API_KEY }} \
+            -a ${{ env.APP_NAME }}
+
       - name: Generate and Store Secrets
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
