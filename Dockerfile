@@ -100,8 +100,6 @@ RUN chmod +x /scripts/* && \
     echo "vm.swappiness=10" >> /etc/sysctl.conf
 
 RUN rm /etc/nginx/sites-enabled/default
-RUN chown -R jellyfin:jellyfin /film && \
-    chmod 775 /film
     
 # Expose port yang diperlukan
 EXPOSE 80 443 8080 8096 8989 3478 41641/udp
