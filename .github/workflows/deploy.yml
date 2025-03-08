@@ -138,10 +138,10 @@ jobs:
           ENCRYPTION_PWD: ${{ secrets.ENCRYPTION_PASSWORD }}
         run: |
           flyctl deploy --app ${{ env.APP_NAME }} \
-            #--build-arg ENCRYPTION_PWD="$ENCRYPTION_PWD" \
+            --build-arg ENCRYPTION_PWD="$ENCRYPTION_PWD" \
             #--dockerfile Dockerfile \
-            --env ENCRYPTION_PWD=$ENCRYPTION_PWD \
-            --env TAILSCALE_AUTHKEY=$TAILSCALE_AUTHKEY \
+            #--env ENCRYPTION_PWD=$ENCRYPTION_PWD \
+            --build-args TAILSCALE_AUTHKEY=$TAILSCALE_AUTHKEY \
             --remote-only \
             --verbose
 
