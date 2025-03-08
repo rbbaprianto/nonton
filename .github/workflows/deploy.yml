@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+env:
+  PRIMARY_REGION: sin
+  APP_NAME: nonton
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
@@ -15,52 +19,70 @@ jobs:
         with:
           version: "latest"
 
-      - name: Create App
+      - name: Create Fly App
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          if ! flyctl apps list | grep -q "nonton"; then
-            flyctl apps create nonton \
-              --name nonton \
+          if ! flyctl apps list | grep -q "${{ env.APP_NAME }}"; then
+            flyctl apps create ${{ env.APP_NAME }} \
+              --name ${{ env.APP_NAME }} \
               --org personal
           fi
-          echo "primary_region = \"sin\"" >> fly.toml
+          echo -e "app = \"${{ env.APP_NAME }}\"\nprimary_region = \"${{ env.PRIMARY_REGION }}\"" > fly.toml
 
-      - name: Deploy
+      - name: Generate Environment File
+        run: |
+          cat << EOF > .env
+          JELLYFIN_API_KEY=${{ secrets.JELLYFIN_API_KEY }}
+          SONARR_API_KEY=${{ secrets.SONARR_API_KEY }}
+          RADARR_API_KEY=${{ secrets.RADARR_API_KEY }}
+          BAZARR_API_KEY=${{ secrets.BAZARR_API_KEY }}
+          RCLONE_CONFIG=${{ secrets.RCLONE_CONFIG }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
+          QBITTORRENT_WEBUI_PASSWORD=$(echo -n "${{ secrets.QBITTORRENT_WEBUI_PASSWORD }}" | sha1sum | awk '{print $1}')
+          EOF
+
+      - name: Deploy to Fly.io
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl deploy --app nonton --remote-only --verbose
+        run: |
+          flyctl deploy \
+            --app ${{ env.APP_NAME }} \
+            --remote-only \
+            --build-arg JELLYFIN_API_KEY="${{ secrets.JELLYFIN_API_KEY }}" \
+            --build-arg SONARR_API_KEY="${{ secrets.SONARR_API_KEY }}" \
+            --build-arg RADARR_API_KEY="${{ secrets.RADARR_API_KEY }}" \
+            --build-arg BAZARR_API_KEY="${{ secrets.BAZARR_API_KEY }}" \
+            --build-arg RCLONE_CONFIG="${{ secrets.RCLONE_CONFIG }}" \
+            --build-arg TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
+            --build-arg TAILSCALE_AUTHKEY="${{ secrets.TAILSCALE_AUTHKEY }}" \
+            --build-arg QBITTORRENT_WEBUI_PASSWORD="${{ secrets.QBITTORRENT_WEBUI_PASSWORD }}"
 
   cleanup:
     needs: deploy
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/github-script@v7
+      - name: Cleanup Old Workflows
+        uses: actions/github-script@v7
         with:
           script: |
             const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
+              workflow_id: context.workflow,
               per_page: 100
-            });
+            })
             
-            const currentWorkflowId = context.payload.workflow.id;
-            const currentRunId = context.runId;
-            
-            const toDelete = runs.workflow_runs
-              .filter(run => 
-                run.id !== currentRunId && 
-                run.status === 'completed' && 
-                new Date(run.created_at) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-              )
-              .slice(5);
+            const keep = 5
+            const toDelete = runs.workflow_runs.slice(keep)
             
             for (const run of toDelete) {
               await github.rest.actions.deleteWorkflowRun({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 run_id: run.id
-              });
+              })
             }
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
