@@ -23,11 +23,11 @@ jobs:
               workflow_id: context.workflow,
               per_page: 100
             });
-
+            
             const currentRunId = context.runId;
             const sortedRuns = runs.workflow_runs.sort((a, b) => b.id - a.id);
-            const runsToDelete = sortedRuns.slice(1);
-
+            const runsToDelete = sortedRuns.slice(5);
+            
             for (const run of runsToDelete) {
               if (run.id !== currentRunId && run.status !== 'in_progress') {
                 await github.rest.actions.deleteWorkflowRun({
@@ -55,9 +55,6 @@ jobs:
         run: |
           if ! flyctl apps list | grep -q "${{ env.APP_NAME }}"; then
             flyctl apps create ${{ env.APP_NAME }} --org personal
-            echo "✅ App created"
-          else
-            echo "ℹ️ App already exists"
           fi
           echo "app = \"${{ env.APP_NAME}}\"" > fly.toml
           echo "primary_region = \"${{ env.PRIMARY_REGION}}\"" >> fly.toml
@@ -71,25 +68,21 @@ jobs:
           if [ -z "${{ secrets.ENCRYPTION_PASSWORD }}" ]; then
             PASSWORD=$(openssl rand -hex 16)
             
-            # Dapatkan public key repo
             PUBLIC_KEY_JSON=$(curl -s -H "Authorization: token $PAT_TOKEN" \
               https://api.github.com/repos/$GITHUB_REPOSITORY/actions/secrets/public-key)
             PUBLIC_KEY=$(echo "$PUBLIC_KEY_JSON" | jq -r '.key')
             KEY_ID=$(echo "$PUBLIC_KEY_JSON" | jq -r '.key_id')
             
-            # Enkripsi password
-            ENCRYPTED_VALUE=$(echo -n "$PASSWORD" | openssl rsautl -encrypt -pubin -inkey <(echo "$PUBLIC_KEY" | base64 -d) | base64 -w 0)
-
-            # Simpan secret
+            ENCRYPTED_VALUE=$(echo -n "$PASSWORD" | openssl pkeyutl -encrypt -pubin -inkey <(echo "$PUBLIC_KEY" | base64 -d) | base64 -w0)
+            
             curl -X PUT -H "Authorization: token $PAT_TOKEN" \
               -H "Content-Type: application/json" \
               -d "{\"encrypted_value\":\"$ENCRYPTED_VALUE\",\"key_id\":\"$KEY_ID\"}" \
               https://api.github.com/repos/$GITHUB_REPOSITORY/actions/secrets/ENCRYPTION_PASSWORD
             
-            # Kirim notifikasi ke Telegram
             curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
               -d chat_id="$TELEGRAM_CHAT_ID" \
-              -d text="🔐 *New Encryption Password Generated* ||${PASSWORD}||" \
+              -d text="🔐 New Password Generated: ||$PASSWORD||" \
               -d parse_mode="MarkdownV2"
             
             echo "ENCRYPTION_PASSWORD=$PASSWORD" >> $GITHUB_ENV
@@ -112,13 +105,10 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           DEPLOY_URL="https://${{ env.APP_NAME }}.fly.dev"
-          CURRENT_DATE=$(date +"%Y-%m-%d %H:%M:%S %Z")
+          MESSAGE="🚀 Deployment Success%0A✅ App: ${{ env.APP_NAME }}%0A🔗 URL: $DEPLOY_URL%0A📅 $(date +'%Y-%m-%d %H:%M:%S %Z')"
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="🚀 Deployment Success!
-✅ App: ${{ env.APP_NAME }}
-🔗 URL: $DEPLOY_URL
-📅 ${CURRENT_DATE}" \
+            -d text="$MESSAGE" \
             -d parse_mode="Markdown"
 
       - name: Send Failure Notification
@@ -130,6 +120,5 @@ jobs:
           LOGS_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="❌ *Deployment Failed*
-🔍 [Check Logs]($LOGS_URL)" \
-            -d parse_mode="MarkdownV2"
+            -d text="❌ Deployment Failed%0A🔍 Logs: $LOGS_URL" \
+            -d parse_mode="Markdown"
