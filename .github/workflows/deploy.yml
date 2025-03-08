@@ -145,7 +145,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           DEPLOY_URL="https://${{ env.APP_NAME }}.fly.dev"
-          MESSAGE="🚀 Deployment Success%0A✅ App: ${{ env.APP_NAME }}%0A🔗 URL: $DEPLOY_URL%0A📅 $(date +'%Y-%m-%d %H:%M:%S %Z')"
+          MESSAGE="🚀 Deployment Success%0A✅ App: ${{ env.APP_NAME }}%0A🔗 URL: $DEPLOY_URL%0A📅 $(TZ='Asia/Jakarta' date +'%Y-%m-%d %H:%M:%S %Z')"
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="$MESSAGE" \
