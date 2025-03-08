@@ -50,15 +50,30 @@ jobs:
       - name: Setup Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Create App
+      - name: Create App and Volume
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
+          # Create app jika belum ada
           if ! flyctl apps list | grep -q "${{ env.APP_NAME }}"; then
             flyctl apps create ${{ env.APP_NAME }} --org personal
           fi
+
+          # Create volume 10GB jika belum ada
+          if ! flyctl volumes list -a ${{ env.APP_NAME }} | grep -q "film_volume"; then
+            flyctl volumes create film_volume \
+              --app ${{ env.APP_NAME }} \
+              --size 10 \
+              --region ${{ env.PRIMARY_REGION }} \
+              --require-unique-zone false
+          fi
+
+          # Generate fly.toml
           echo "app = \"${{ env.APP_NAME}}\"" > fly.toml
           echo "primary_region = \"${{ env.PRIMARY_REGION}}\"" >> fly.toml
+          echo '[[mounts]]' >> fly.toml
+          echo '  source = "film_volume"' >> fly.toml
+          echo '  destination = "/film"' >> fly.toml
 
       - name: Generate and Store Secrets
         env:
