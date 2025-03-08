@@ -22,10 +22,10 @@ jobs:
         run: |
           case "${{ github.event.inputs.action }}" in
             create)
-              flyctl volumes create film_volume -a nonton --size 10 --region sin
+              flyctl volumes create film_volume -a nonton --size 10 --region sin --yes
               ;;
             extend)
               VOLUME_ID=$(flyctl volumes list -a nonton -j | jq -r '.[] | select(.name == "film_volume") | .id')
-              flyctl volumes extend $VOLUME_ID -a nonton --size ${{ github.event.inputs.size }}
+              flyctl volumes extend $VOLUME_ID -a nonton --size ${{ github.event.inputs.size }} --yes
               ;;
           esac
