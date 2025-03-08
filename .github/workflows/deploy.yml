@@ -11,7 +11,8 @@ on:
 
 env:
   APP_NAME: "nonton"
-  PRIMARY_REGION: "sin"
+  PRIMARY_REGION: "sin"  
+  ARTIFACT_NAME: "release_$(date +%Y%m%d%H%M%S).zip"
 
 jobs:
   cleanup:
@@ -53,6 +54,13 @@ jobs:
 
       - name: Setup Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Create Release Artifact
+        run: |
+          # Exclude sensitive files
+          zip -r ${{ env.ARTIFACT_NAME }} . \
+            -x *.git* \*.env* \*secrets* \*fly.toml
+          echo "ARTIFACT_PATH=$(pwd)/${{ env.ARTIFACT_NAME }}" >> $GITHUB_ENV
 
       - name: Create App and Volume
         env:
@@ -163,19 +171,41 @@ jobs:
         run: |
           DEPLOY_URL="https://${{ env.APP_NAME }}.fly.dev"
           MESSAGE="🚀 Deployment Success%0A✅ App: ${{ env.APP_NAME }}%0A🔗 URL: $DEPLOY_URL%0A📅 $(TZ='Asia/Jakarta' date +'%Y-%m-%d %H:%M:%S %Z')"
-          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
-            -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="$MESSAGE" \
-            -d parse_mode="Markdown"
+          
+          # Send message with document
+          curl -F document=@${{ env.ARTIFACT_PATH }} \
+            -F caption="$MESSAGE" \
+            "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument?chat_id=$TELEGRAM_CHAT_ID&parse_mode=Markdown"
 
-      - name: Send Failure Notification
+      - name: Verify Deployment
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          # Check HTTP status
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.APP_NAME }}.fly.dev/health)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Deployment verification failed" >&2
+            exit 1
+          fi
+
+      - name: Rollback on Failure
         if: failure()
         env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          LOGS_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          # Get last successful deployment
+          LAST_GOOD_DEPLOYMENT=$(flyctl deployments list -a ${{ env.APP_NAME }} | grep complete | tail -n 1 | awk '{print $1}')
+          
+          # Revert deployment
+          flyctl deployments revert $LAST_GOOD_DEPLOYMENT -a ${{ env.APP_NAME }} -y
+          
+          # Get logs
+          LOGS=$(flyctl logs -a ${{ env.APP_NAME }} | tail -n 50)
+          
+          # Send failure notification
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="❌ Deployment Failed%0A🔍 Logs: $LOGS_URL" \
+            -d text="❌ Deployment Failed%0A🔍 Logs: $LOGS%0A🔄 Rollback to version: $LAST_GOOD_DEPLOYMENT" \
             -d parse_mode="Markdown"
