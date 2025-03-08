@@ -181,19 +181,20 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          # Gunakan endpoint Jellyfin yang valid
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.APP_NAME }}.fly.dev/System/Info)
-          if [ "$STATUS" -ne 200 ]; then
-             echo "Deployment verification failed. Jellyfin returned $STATUS" >&2
-      
-             # Dapatkan log error terakhir
-             ERROR_LOG=$(flyctl logs -a ${{ env.APP_NAME }} | grep -i 'error\|fail' | tail -n 20)
-             echo "Last error logs:" >&2
-             echo "$ERROR_LOG" >&2
+          # Retry maksimal 3 kali dengan interval 15 detik
+          for i in {1..3}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.APP_NAME }}.fly.dev/System/Info)
+            if [ "$STATUS" -eq 200 ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: Health check failed (Status: $STATUS)"
+            sleep 15
+          done
     
-             exit 1
-          fi
-
+          echo "Deployment verification failed after 3 attempts" >&2
+          exit 1
+    
       - name: Rollback on Failure
         if: failure()
         env:
