@@ -1,5 +1,5 @@
 {
-  "ApiKey": "${JELLYFIN_API_KEY}",
+  "ApiKey": "{{JELLYFIN_API_KEY}}",
   "BaseUrl": "/",
   "EnableHttps": false,
   "PublicPort": 443,
