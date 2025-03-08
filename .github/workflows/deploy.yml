@@ -217,17 +217,28 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          # Get last successful deployment
-          LAST_GOOD_DEPLOYMENT=$(flyctl deployments list -a ${{ env.APP_NAME }} | grep complete | tail -n 1 | awk '{print $1}')
-          
-          # Revert deployment
-          flyctl deployments revert $LAST_GOOD_DEPLOYMENT -a ${{ env.APP_NAME }} -y
-          
-          # Get logs
+          # Dapatkan list deployment dalam format JSON
+          DEPLOYMENTS_JSON=$(flyctl deploy list -a ${{ env.APP_NAME }} --json)
+    
+          # Ekstrak ID deployment terakhir yang sukses
+          LAST_GOOD_DEPLOYMENT=$(echo $DEPLOYMENTS_JSON | jq -r '.[] | select(.Status == "complete") | .ID' | tail -n 1)
+    
+          if [ -z "$LAST_GOOD_DEPLOYMENT" ]; then
+            echo "No previous successful deployment found"
+            exit 1
+          fi
+    
+          # Rollback ke deployment yang berhasil
+          flyctl deploy rollback $LAST_GOOD_DEPLOYMENT -a ${{ env.APP_NAME }} -y
+    
+          # Dapatkan log error
           LOGS=$(flyctl logs -a ${{ env.APP_NAME }} | tail -n 50)
-          
-          # Send failure notification
+    
+          # Format pesan error
+          MESSAGE="❌ Deployment Failed%0A🔍 Logs: ${LOGS//$'\n'/'%0A'}%0A🔄 Rollback to version: $LAST_GOOD_DEPLOYMENT"
+    
+          # Kirim notifikasi
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="❌ Deployment Failed%0A🔍 Logs: $LOGS%0A🔄 Rollback to version: $LAST_GOOD_DEPLOYMENT" \
+            -d text="$MESSAGE" \
             -d parse_mode="Markdown"
