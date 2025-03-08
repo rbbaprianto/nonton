@@ -7,16 +7,9 @@ primary_region = "sin"
     "ENCRYPTION_PWD"
   ]
 
-[mounts]
-  source = "media_volume"
-  destination = "/media"  # Sync dengan JELLYFIN_DATA_DIR
-
 [http_service]
   internal_port = 80
   force_https = true
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 1
 
 [[http_service.ports]]
   handlers = ["http"]
@@ -27,9 +20,14 @@ primary_region = "sin"
   port = 443
 
 [mounts]
-  source = "nonton_data"
-  destination = "/data"
+  source = "media_volume"
+  destination = "/media"
+  auto_extend = true
+
+[env]
+  JELLYFIN_DATA_DIR = "/media"
+  TS_STATE_DIR = "/var/lib/tailscale"
 
 [metrics]
-  port = 8096
-  path = "/health_check"
+  port = 80
+  path = "/healthz"
