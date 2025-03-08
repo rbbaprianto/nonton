@@ -111,4 +111,4 @@ CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s \
-  CMD curl --fail http://localhost:80 || exit 1
+  CMD curl --fail http://localhost:8096/health_check || exit 1
