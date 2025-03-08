@@ -138,7 +138,7 @@ jobs:
           ENCRYPTION_PWD: ${{ secrets.ENCRYPTION_PASSWORD }}
         run: |
           flyctl deploy --app ${{ env.APP_NAME }} \
-            --build-arg ENCRYPTION_PWD="$ENCRYPTION_PWD" \
+            #--build-arg ENCRYPTION_PWD="$ENCRYPTION_PWD" \
             --remote-only \
             --verbose
 
