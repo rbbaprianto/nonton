@@ -9,18 +9,50 @@ env:
   PRIMARY_REGION: "sin"
 
 jobs:
-  deploy:
+  cleanup:
     runs-on: ubuntu-24.04
-    # Tambahkan permissions di level job
     permissions:
-      contents: write
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: context.workflow,
+              per_page: 100
+            });
+            
+            const currentRunId = context.runId;
+            const sortedRuns = runs.workflow_runs.sort((a, b) => b.id - a.id);
+            const runsToDelete = sortedRuns.slice(5);
+            
+            for (const run of runsToDelete) {
+              if (run.id !== currentRunId && run.status !== 'in_progress') {
+                await github.rest.actions.deleteWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id
+                });
+              }
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+  deploy:
+    needs: cleanup
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
       secrets: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
-        
+
       - name: Create App
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -40,8 +72,8 @@ jobs:
             echo "NEW_SECRETS=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Save Encryption Password
-        if: steps.generate-password.outputs.NEW_PASSWORD
+      - name: Save Secrets
+        if: steps.secrets.outputs.NEW_SECRETS == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -63,7 +95,7 @@ jobs:
               key_id: publicKey.key_id,
             });
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Gunakan PAT bukan GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Deploy
         env:
@@ -74,27 +106,3 @@ jobs:
             --build-arg ENCRYPTION_PWD="$ENCRYPTION_PWD" \
             --remote-only \
             --verbose
-
-  cleanup:
-    needs: deploy
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100
-            });
-            
-            const keep = 5;
-            const toDelete = runs.workflow_runs.slice(keep);
-            
-            for (const run of toDelete) {
-              await github.rest.actions.deleteWorkflowRun({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: run.id
-              });
-            }
