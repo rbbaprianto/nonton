@@ -98,7 +98,6 @@ primary_region = "${{ env.PRIMARY_REGION }}"
   port = 443
 EOF
 
-
       - name: Generate and Store Secrets
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
