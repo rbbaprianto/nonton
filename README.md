@@ -132,5 +132,3 @@ API Keys: [terlampir file terenkripsi]
 ## 📜 Lisensi
 Proyek ini dilisensikan di bawah [MIT License](LICENSE)
 ```
-
----
