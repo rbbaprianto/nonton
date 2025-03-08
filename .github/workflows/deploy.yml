@@ -56,7 +56,7 @@ jobs:
         run: |
           # Create app jika belum ada
           if ! flyctl apps list | grep -q "${{ env.APP_NAME }}"; then
-            flyctl apps create ${{ env.APP_NAME }} --org personal
+            flyctl apps create ${{ env.APP_NAME }} --org personal --yes
           fi
 
           # Create volume 10GB jika belum ada
@@ -65,7 +65,8 @@ jobs:
               --app ${{ env.APP_NAME }} \
               --size 10 \
               --region ${{ env.PRIMARY_REGION }} \
-              --require-unique-zone=false
+              --require-unique-zone=false \
+              --yes
           fi
 
           # Generate fly.toml (HAPUS DUPLIKASI)
