@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python-telegram-bot dengan versi spesifik
-RUN pip3 install python-telegram-bot==13.7 requests cryptography
+RUN pip3 install python-telegram-bot[webhooks]==20.3 pyyaml requests cryptography
 
 # Setup Tailscale dan Supervisor dengan optimasi memori
 RUN mkdir -p /var/run/tailscale /var/lib/tailscale /var/log/supervisor && \
