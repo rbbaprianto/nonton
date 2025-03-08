@@ -28,15 +28,40 @@ RUN apt-get update && \
     python3-pip \
     && apt-get clean
 
+# Install python-telegram-bot dengan versi spesifik
 RUN pip3 install python-telegram-bot==13.7 requests cryptography
+
+# Setup Tailscale dan Supervisor
+RUN mkdir -p /var/run/tailscale /var/lib/tailscale /var/log/supervisor && \
+    # Buat service untuk tailscaled
+    echo "[program:tailscale]\n\
+command = tailscale up --authkey=%(ENV_TAILSCALE_AUTHKEY)s --hostname=fly-app\n\
+autostart = true\n\
+autorestart = true\n\
+startretries = 5\n\
+environment = TAILSCALE_AUTHKEY=\"%(ENV_TAILSCALE_AUTHKEY)s\"\n\
+stdout_logfile = /var/log/supervisor/tailscale.log\n\
+stderr_logfile = /var/log/supervisor/tailscale-error.log\n" >> /etc/supervisord.conf && \
+    # Konfigurasi dasar supervisor
+    echo "[supervisord]\n\
+nodaemon=true\n\
+logfile=/var/log/supervisor/supervisord.log\n\
+pidfile=/var/run/supervisord.pid\n\
+[include]\n\
+files = /etc/supervisor/conf.d/*.conf\n" >> /etc/supervisord.conf
 
 COPY config/ /etc/
 COPY scripts/ /scripts/
 COPY fly.toml .
 
 RUN chmod +x /scripts/* && \
-    mkdir -p /etc/ssl/certs
+    mkdir -p /etc/ssl/certs && \
+    # Setup direktori yang diperlukan
+    mkdir -p /var/lib/tailscale && \
+    mkdir -p /var/log/{jellyfin,qbittorrent,aria2}
 
-EXPOSE 80 443 8080
+# Expose port yang diperlukan
+EXPOSE 80 443 8080 3478 41641/udp
 
-CMD ["/scripts/start.sh"]
+# Entrypoint untuk handling shutdown
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
