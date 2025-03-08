@@ -1,134 +1,95 @@
 ```markdown
-# 🎬 Nonton - Media Server Suite
+# Nonton Media Server
 
-![GitHub Actions](https://github.com/rbbaprianto/nonton/workflows/Deploy%20Nonton/badge.svg)
-![Fly.io Deployment](https://img.shields.io/badge/deployed%20on-fly.io-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+Media server stack terintegrasi untuk streaming, manajemen konten, dan otomasi unduhan. Deploy otomatis ke Fly.io dengan Docker.
 
-All-in-one media server solution dengan integrasi Jellyfin, *Arr stack, dan tools pendukung lainnya. Deploy otomatis ke Fly.io dengan enkripsi API keys dan notifikasi Telegram.
+## Komponen Utama
 
-## 🌟 Fitur Utama
-- **Streaming Media**: Jellyfin dengan konfigurasi optimal
-- **Manajemen Konten**: 
-  - Sonarr (Series TV)
-  - Radarr (Film)
-  - Bazarr (Subtitle)
-- **Unduhan**: 
-  - qBittorrent
-  - Aria2
-- **Monitoring**: 
-  - Uptime Kuma
-  - Netdata
-- **Keamanan**:
-  - Tailscale VPN
-  - Enkripsi API keys AES-256
-- **Otomasi**:
-  - Auto-deploy dengan GitHub Actions
-  - Notifikasi Telegram
-  - Self-healing dengan Supervisord
+### Core Services
+- **Jellyfin** (`:8096`) - Streaming media
+- **qBittorrent** (`:8080`) - Torrent client
+- **Aria2** - Download client HTTP/FTP
+- **Sonarr** (`:8989`) - Manajemen series TV
+- **Radarr** (`:7878`) - Manajemen film
+- **Bazarr** (`:6767`) - Manajemen subtitle
 
-## 🚀 Instalasi
+### Infrastruktur
+- **Nginx** - Reverse proxy + SSL
+- **Tailscale** - Koneksi VPN
+- **Supervisord** - Process manager
+- **Fly.io** - Deployment platform
 
-### Prasyarat
-- Akun [Fly.io](https://fly.io)
-- Akun [Tailscale](https://tailscale.com)
-- Bot Telegram (@BotFather)
+## Persyaratan
 
-### Langkah Deploy
-1. **Clone Repository**
+### GitHub Secrets
+| Secret Name               | Contoh Value                     |
+|---------------------------|----------------------------------|
+| `FLY_API_TOKEN`           | `fly_xxxx`                       |
+| `TAILSCALE_AUTHKEY`       | `tskey-auth-xxxx`                |
+| `TELEGRAM_BOT_TOKEN`      | `123456:ABC-DEF1234ghIkl-zyx57W2`|
+| `TELEGRAM_CHAT_ID`        | `-1001234567890`                 |
+
+## Struktur File
+```
+.
+├── config/
+│   ├── nginx/jellyfin.conf
+│   ├── jellyfin/config.json
+│   ├── sonarr/config.xml
+│   ├── radarr/config.xml
+│   └── supervisord.conf
+├── scripts/
+│   ├── start.sh
+│   └── send_keys.py
+├── Dockerfile
+└── fly.toml
+```
+
+## Deployment
+1. Clone repository:
 ```bash
 git clone https://github.com/rbbaprianto/nonton.git
 cd nonton
 ```
 
-2. **Setup GitHub Secrets**  
-Buka repo Settings > Secrets > Actions, tambahkan:
-- `FLY_API_TOKEN` - Token Fly.io
-- `TAILSCALE_AUTHKEY` - Tailscale auth key
-- `TELEGRAM_BOT_TOKEN` - Dari @BotFather
-- `TELEGRAM_CHAT_ID` - ID chat Anda
-- `ENCRYPTION_PASSWORD` (biarkan kosong untuk auto-generate)
-
-3. **Deploy ke Fly.io**  
-Push ke branch `main` untuk trigger deploy otomatis:
+2. Push ke Fly.io:
 ```bash
 git push origin main
 ```
 
-## 🔧 Konfigurasi
-### Struktur File Penting
-```
-config/
-├── nginx/            # Reverse proxy config
-├── jellyfin/         # Konfigurasi Jellyfin
-├── *arr/             # Konfigurasi Sonarr/Radarr/Bazarr
-└── supervisord.conf  # Manajemen proses
+Proses otomatis akan:
+1. Build Docker image
+2. Generate API keys terenkripsi
+3. Konfigurasi reverse proxy
+4. Kirim notifikasi ke Telegram
+
+## Manajemen
+
+### Perintah Fly.io
+```bash
+# Masuk ke container
+flyctl ssh console -a nonton
+
+# Lihat logs
+flyctl logs -a nonton
+
+# Scale resources
+flyctl scale memory 2048 -a nonton
 ```
 
 ### Environment Variables
-File `.env.example` akan di-generate otomatis dengan:
-```ini
-JELLYFIN_API_KEY=auto-generated
-TAILSCALE_AUTHKEY=your_tailscale_key
-...
-```
+| Variable               | Contoh Value               |
+|------------------------|----------------------------|
+| `JELLYFIN_API_KEY`     | `d3b07384d113edec49...`    |
+| `RADARR_API_KEY`       | `c157a79031e1c40f...`      |
+| `ENCRYPTION_PASSWORD`  | `aes256-encrypted-secret`  |
 
-## 🛠️ Penggunaan
-### Akses Layanan
-| Service       | URL                          |
-|---------------|------------------------------|
-| Jellyfin      | `https://nonton.fly.dev`     |
-| qBittorrent   | `https://nonton.fly.dev:8080`|
-| Sonarr        | `https://nonton.fly.dev/sonarr` |
+## Keamanan
+- API keys dienkripsi dengan AES-256
+- Notifikasi Telegram untuk aktivitas kritis
+- Tailscale VPN untuk akses internal
+- Auto-healing dengan Supervisord
 
-### Perintah Utama
-```bash
-# Cek status aplikasi
-flyctl status --app nonton
-
-# Buka aplikasi
-flyctl open --app nonton
-
-# Lihat logs
-flyctl logs --app nonton
-```
-
-## 🔒 Keamanan
-1. **API Keys**  
-   - Auto-generate saat deploy pertama
-   - Terenkripsi dengan AES-256
-   - Dikirim via Telegram dalam format aman
-
-2. **Jaringan**  
-   - Tailscale VPN untuk akses internal
-   - SSL otomatis dari Fly.io
-
-## 🤖 Notifikasi Telegram
-Contoh notifikasi yang akan diterima:
-```
-🚀 DEPLOYMENT SUCCESS
-App: nonton
-URL: https://nonton.fly.dev
-API Keys: [terlampir file terenkripsi]
-```
-
-## 📂 Struktur Proyek
-```bash
-.
-├── .github/          # Workflow CI/CD
-├── config/           # File konfigurasi semua layanan
-├── scripts/          # Script deployment & notifikasi
-├── Dockerfile        # Konfigurasi Docker
-└── fly.toml          # Konfigurasi Fly.io
-```
-
-## 🤝 Berkontribusi
-1. Fork repository
-2. Buat branch fitur (`git checkout -b fitur/namafitur`)
-3. Commit perubahan (`git commit -m 'Tambahkan fitur'`)
-4. Push ke branch (`git push origin fitur/namafitur`)
-5. Buat Pull Request
-
-## 📜 Lisensi
-Proyek ini dilisensikan di bawah [MIT License](LICENSE)
+## Lisensi
+MIT License
 ```
