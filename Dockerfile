@@ -14,8 +14,13 @@ RUN apt-get update && \
     gettext-base \
     openssl \
     wget \
+    python3 \
+    python3-pip \
     unzip && \
     apt-get clean
+
+# Install Python dependencies
+RUN pip3 install requests
 
 # Install aplikasi tambahan
 RUN wget https://github.com/Radarr/Radarr/releases/download/v4.8.0/Radarr.master.4.8.0.8153.linux-core-x64.zip -O /tmp/radarr.zip && \
@@ -29,13 +34,15 @@ RUN mkdir -p /etc/{jellyfin,rclone,aria2,kuma,bot,prowlarr,sonarr,radarr,bazarr,
 COPY config/ /etc/
 COPY scripts/ /scripts/
 COPY .env.example /etc/environment
+COPY fly.toml .
 
 # Setup permissions
 RUN chmod +x /scripts/*.sh && \
-    chmod +x /opt/Radarr/Radarr
+    chmod +x /opt/Radarr/Radarr \
+    mkdir -p /etc/ssl/certs
 
 # Expose ports
-EXPOSE 443 8080
+EXPOSE 80 443 8080
 
 CMD ["/scripts/start.sh"]
 
