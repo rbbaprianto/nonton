@@ -2,6 +2,7 @@ FROM ubuntu:22.04
 
 ARG ENCRYPTION_PWD
 ENV ENCRYPTION_PWD=$ENCRYPTION_PWD
+ENV TAILSCALE_AUTHKEY=$TAILSCALE_AUTHKEY
 
 # Install dependencies dan tambahkan repository
 RUN apt-get update && \
