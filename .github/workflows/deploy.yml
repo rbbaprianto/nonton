@@ -23,11 +23,11 @@ jobs:
               workflow_id: context.workflow,
               per_page: 100
             });
-            
+
             const currentRunId = context.runId;
             const sortedRuns = runs.workflow_runs.sort((a, b) => b.id - a.id);
             const runsToDelete = sortedRuns.slice(1);
-            
+
             for (const run of runsToDelete) {
               if (run.id !== currentRunId && run.status !== 'in_progress') {
                 await github.rest.actions.deleteWorkflowRun({
@@ -68,7 +68,6 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          # Generate password jika belum ada
           if [ -z "${{ secrets.ENCRYPTION_PASSWORD }}" ]; then
             PASSWORD=$(openssl rand -hex 16)
             
@@ -79,8 +78,8 @@ jobs:
             KEY_ID=$(echo "$PUBLIC_KEY_JSON" | jq -r '.key_id')
             
             # Enkripsi password
-            ENCRYPTED_VALUE=$(echo -n "$PASSWORD" | openssl pkeyutl -encrypt -pubin -inkey <(echo "$PUBLIC_KEY" | base64 -d) | base64 -w0)
-            
+            ENCRYPTED_VALUE=$(echo -n "$PASSWORD" | openssl rsautl -encrypt -pubin -inkey <(echo "$PUBLIC_KEY" | base64 -d) | base64 -w 0)
+
             # Simpan secret
             curl -X PUT -H "Authorization: token $PAT_TOKEN" \
               -H "Content-Type: application/json" \
