@@ -1,6 +1,11 @@
 app = "nonton"
 primary_region = "sin"
 
+[vm]
+  memory = "4gb"
+  cpus = 2
+  cpu_kind = "performance"
+
 [build]
   dockerfile = "Dockerfile"
   build_args = [
