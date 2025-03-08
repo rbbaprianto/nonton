@@ -11,6 +11,8 @@ primary_region = "sin"
   build_args = [
     "ENCRYPTION_PWD"
   ]
+  builtin = "dockerfile"
+  ignorefile = ".dockerignore"
 
 [mounts] # <== HANYA SATU SECTION INI
   source = "film_volume"
