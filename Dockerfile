@@ -6,13 +6,16 @@ ENV ENCRYPTION_PWD=$ENCRYPTION_PWD
 # Install dependencies dan tambahkan repository
 RUN apt-get update && \
     apt-get install -y curl gnupg software-properties-common && \
-    # Tambahkan repo Jellyfin
+
+# Tambahkan repo Jellyfin
     curl -fsSL https://repo.jellyfin.org/ubuntu/jellyfin_team.gpg.key | gpg --dearmor -o /usr/share/keyrings/jellyfin.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/ubuntu jammy main" | tee /etc/apt/sources.list.d/jellyfin.list && \
-    # Tambahkan repo Tailscale
+
+# Tambahkan repo Tailscale
     curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null && \
     curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list && \
-    # Tambahkan PPA qBittorrent
+
+# Tambahkan PPA qBittorrent
     add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y && \
     apt-get update && \
     apt-get install -y \
@@ -30,6 +33,12 @@ RUN apt-get update && \
 
 # Tambahkan package
 RUN apt-get install -y jq gh
+
+# Install dependencies untuk monitoring
+RUN apt-get update && apt-get install -y \
+    python3-distutils \
+    python3-apt \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install python-telegram-bot dengan versi spesifik
 RUN pip3 install python-telegram-bot==13.7 requests cryptography
