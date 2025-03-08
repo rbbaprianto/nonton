@@ -1,25 +1,31 @@
-name: Deploy nonton.fly.dev
+name: Deploy Nonton
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [main]
 
 jobs:
-
-  build:
-
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       
-    - name: Setup Fly
-      uses: superfly/flyctl-actions/setup-flyctl@master
-      
-    - name: Deploy
-      env:
+      - name: Setup Fly
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Create App if Not Exists
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if ! flyctl apps list | grep -q "nonton"; then
+            flyctl apps create nonton \
+              --name nonton \
+              --org personal \
+              --region sin
+          fi
+
+      - name: Deploy App
+        env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           JELLYFIN_API_KEY: ${{ secrets.JELLYFIN_API_KEY }}
           RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
@@ -29,14 +35,27 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
           QBITTORRENT_WEBUI_PASSWORD: ${{ secrets.QBITTORRENT_WEBUI_PASSWORD }}
-      run: |
-          flyctl deploy --app nonton --remote-only \
-            --build-arg SKIP_API_KEYS=true
-            --build-arg JELLYFIN_API_KEY="$JELLYFIN_API_KEY" \
-            --build-arg RCLONE_CONFIG="$RCLONE_CONFIG" \
-            --build-arg SONARR_API_KEY="$SONARR_API_KEY" \
-            --build-arg RADARR_API_KEY="$RADARR_API_KEY" \
-            --build-arg BAZARR_API_KEY="$BAZARR_API_KEY" \
-            --build-arg TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
-            --build-arg TAILSCALE_AUTHKEY="$TAILSCALE_AUTHKEY" \
-            --build-arg QBITTORRENT_WEBUI_PASSWORD="$QBITTORRENT_WEBUI_PASSWORD"
+        run: |
+          flyctl deploy \
+            --app nonton \
+            --remote-only \
+            --strategy immediate \
+            --verbose
+
+  cleanup_workflows:
+    name: Cleanup Old Workflows
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Delete old workflow runs
+        uses: dev-drprasad/delete-workflow-runs@v0.2.0
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          keep_last: 1  # Menyimpan 1 workflow terbaru
+          older_than_days: 0
+          delete_all_but_latest: true
