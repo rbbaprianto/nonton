@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-ARG ENCRYPTION_PWD
+#ARG ENCRYPTION_PWD
 ENV ENCRYPTION_PWD=$ENCRYPTION_PWD
 
 # Install dependencies dan tambahkan repository
