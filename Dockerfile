@@ -28,6 +28,9 @@ RUN apt-get update && \
     python3-pip \
     && apt-get clean
 
+# Tambahkan package
+RUN apt-get install -y jq gh
+
 # Install python-telegram-bot dengan versi spesifik
 RUN pip3 install python-telegram-bot==13.7 requests cryptography
 
@@ -69,6 +72,7 @@ logfile=/var/log/supervisor/supervisord.log\n\
 pidfile=/var/run/supervisord.pid\n\
 [include]\n\
 files = /etc/supervisor/conf.d/*.conf\n" >> /etc/supervisord.conf
+
 
 COPY config/ /etc/
 COPY scripts/ /scripts/
