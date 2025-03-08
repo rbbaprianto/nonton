@@ -7,7 +7,7 @@ primary_region = "sin"
     "ENCRYPTION_PWD"
   ]
 
-[mounts]
+[mounts] # <== HANYA SATU SECTION INI
   source = "film_volume"
   destination = "/film"
   initial_size = "10gb"
@@ -26,10 +26,6 @@ primary_region = "sin"
 [[http_service.ports]]
   handlers = ["tls", "http"]
   port = 443
-
-[mounts]
-  source = "nonton_data"
-  destination = "/data"
 
 [metrics]
   port = 8096
