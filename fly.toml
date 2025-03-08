@@ -8,8 +8,9 @@ primary_region = "sin"
   ]
 
 [mounts]
-  source = "media_volume"
-  destination = "/media"  # Sync dengan JELLYFIN_DATA_DIR
+  source = "film_volume"
+  destination = "/film"
+  initial_size = "10gb"
 
 [http_service]
   internal_port = 80
