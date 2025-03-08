@@ -60,7 +60,7 @@ jobs:
         run: |
           # Create app jika belum ada
           if ! flyctl apps list | grep -q "${{ env.APP_NAME }}"; then
-            flyctl apps create ${{ env.APP_NAME }} --org personal --yes
+            flyctl apps create ${{ env.APP_NAME }} --org personal
           fi
 
           # Create volume 10GB jika belum ada
