@@ -88,3 +88,7 @@ EXPOSE 80 443 8080 3478 41641/udp
 
 # Entrypoint untuk handling shutdown
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s \
+  CMD curl --fail http://localhost:80 || exit 1
