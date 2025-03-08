@@ -102,7 +102,9 @@ EXPOSE 80 443 8080 3478 41641/udp
 # Flyctl authentication
 ENV FLYCTL_INSTALL="/root/.fly"
 ENV PATH="$FLYCTL_INSTALL/bin:$PATH"
-RUN flyctl auth token || true  # Will prompt for token if not set
+# ✅ BENAR
+ENV FLY_API_TOKEN=$FLY_API_TOKEN
+RUN flyctl auth token --check
 
 # Entrypoint untuk handling shutdown
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
