@@ -1,0 +1,31 @@
+name: Volume Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action (create|extend)'
+        required: true
+      size:
+        description: 'New size in GB (hanya untuk extend)'
+        required: false
+
+jobs:
+  volume_ops:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Handle Volume
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          case "${{ github.event.inputs.action }}" in
+            create)
+              flyctl volumes create film_volume -a nonton --size 10 --region sin
+              ;;
+            extend)
+              VOLUME_ID=$(flyctl volumes list -a nonton -j | jq -r '.[] | select(.name == "film_volume") | .id')
+              flyctl volumes extend $VOLUME_ID -a nonton --size ${{ github.event.inputs.size }}
+              ;;
+          esac
