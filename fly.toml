@@ -33,7 +33,3 @@ primary_region = "sin"
 [[http_service.ports]]
   handlers = ["tls", "http"]
   port = 443
-
-[metrics]
-  port = 8096
-  path = "/health_check"
