@@ -83,7 +83,7 @@ stdout_logfile=/var/log/supervisor/tailscale.log\n\
 stderr_logfile=/var/log/supervisor/tailscale-error.log" > /etc/supervisor/supervisord.conf
 
 # Nginx configuration
-COPY config/nginx.conf /etc/nginx/sites-available/default
+COPY config/nginx/jellyfin.conf /etc/nginx/sites-available/default
 RUN rm /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
 
