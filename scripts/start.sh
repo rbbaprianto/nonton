@@ -36,3 +36,9 @@ fi
 # Start services
 tailscale up --authkey=$TAILSCALE_AUTHKEY --hostname=nonton
 /usr/bin/supervisord -n
+
+# Start tailscaled service
+tailscaled --state=/var/lib/tailscale/tailscaled.state &
+
+# Start supervisor
+exec /usr/bin/supervisord -c /etc/supervisord.conf
