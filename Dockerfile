@@ -54,14 +54,14 @@ RUN mkdir -p /var/run/tailscale /var/lib/tailscale /var/log/supervisor && \
 command = jellyfin --nowebclient --ffmpeg-path=/usr/bin/ffmpeg --transcoding-threads=2\n\
 autostart = true\n\
 autorestart = true\n\
-environment = JELLYFIN_FFMPEG_OPTIONS='-threads 2',JELLYFIN_MEMORY_LIMIT='512M'\n\
+environment = JELLYFIN_FFMPEG_OPTIONS='-threads 2',JELLYFIN_MEMORY_LIMIT='2G'\n\
 priority = 100\n\
 stdout_logfile = /var/log/supervisor/jellyfin.log\n\
 stderr_logfile = /var/log/supervisor/jellyfin-error.log\n\n" >> /etc/supervisord.conf && \
 
     # Konfigurasi qBittorrent dengan limit download
     echo "[program:qbittorrent]\n\
-command = qbittorrent-nox --webui-port=8080 --max-concurrent-downloads=3\n\
+command = qbittorrent-nox --webui-port=8989 --max-concurrent-downloads=3\n\
 autostart = true\n\
 autorestart = true\n\
 priority = 200\n\
@@ -86,7 +86,6 @@ pidfile=/var/run/supervisord.pid\n\
 [include]\n\
 files = /etc/supervisor/conf.d/*.conf\n" >> /etc/supervisord.conf
 
-
 COPY config/ /etc/
 COPY scripts/ /scripts/
 COPY fly.toml .
@@ -100,8 +99,12 @@ RUN chmod +x /scripts/* && \
     echo "* soft nofile 65536\n* hard nofile 65536" >> /etc/security/limits.conf && \
     echo "vm.swappiness=10" >> /etc/sysctl.conf
 
+RUN rm /etc/nginx/sites-enabled/default
+RUN chown -R jellyfin:jellyfin /film && \
+    chmod 775 /film
+    
 # Expose port yang diperlukan
-EXPOSE 80 443 8080 3478 41641/udp
+EXPOSE 80 443 8080 8096 8989 3478 41641/udp
 
 # Install flyctl
 RUN curl -L https://fly.io/install.sh | FLYCTL_INSTALL=/usr/local sh
