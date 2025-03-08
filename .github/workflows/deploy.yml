@@ -1,4 +1,4 @@
-name: Deploy Nonton
+name: Deploy nonton.fly.dev
 
 on:
   push:
@@ -194,7 +194,22 @@ jobs:
     
           echo "Deployment verification failed after 3 attempts" >&2
           exit 1
+
+      - name: Debugging Info
+        if: failure()
+        run: |
+          echo "=== Service Status ==="
+          flyctl status -a ${{ env.APP_NAME }}
     
+          echo "=== Recent Logs ==="
+          flyctl logs -a ${{ env.APP_NAME }} | tail -n 50
+    
+          echo "=== Volume Info ==="
+          flyctl volumes list -a ${{ env.APP_NAME }}
+    
+          echo "=== Network Check ==="
+          curl -v https://${{ env.APP_NAME }}.fly.dev/System/Info
+   
       - name: Rollback on Failure
         if: failure()
         env:
