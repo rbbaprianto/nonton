@@ -116,8 +116,7 @@ jobs:
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="🚀 *Deployment Success*
 ✅ App: ${{ env.APP_NAME }}
-🌐 URL: $DEPLOY_URL
-🕒 $(date +'\%Y-\%m-\%d \%H:\%M:\%S \%Z') \
+🌐 URL: $DEPLOY_URL \
             -d parse_mode="Markdown"
 
       - name: Send Failure Notification
