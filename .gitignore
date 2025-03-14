@@ -1,8 +1,0 @@
-.env
-*.swp
-*.pem
-.DS_Store
-config/*.conf
-!config/*.template
-.github
-fly.toml
