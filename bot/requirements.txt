@@ -1,0 +1,5 @@
+python-telegram-bot==20.5
+requests==2.31.0
+python-qbittorrent==0.4.7
+yt-dlp==2023.11.16
+subliminal==2.1.0
