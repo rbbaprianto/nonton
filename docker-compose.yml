@@ -1,72 +1,6 @@
 version: '3.8'
 
 services:
-  qbittorrent:
-    image: linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Asia/Jakarta
-      - WEBUI_PORT=8080
-    volumes:
-      - qbittorrent_config:/config
-      - media_downloads:/downloads
-    ports:
-      - "8080:8080"
-    networks:
-      - media_network
-    depends_on:
-      - gluetun
-
-  jellyfin:
-    image: jellyfin/jellyfin:latest
-    container_name: jellyfin
-    environment:
-      - TZ=Asia/Jakarta
-    volumes:
-      - media_library:/media
-      - jellyfin_config:/config
-      - jellyfin_cache:/cache
-    ports:
-      - "8096:8096"
-    networks:
-      - media_network
-
-  telegram-bot:
-    build: ./bot
-    container_name: telegram-bot
-    environment:
-      - BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - QBITTORRENT_URL=http://qbittorrent:8080
-      - LIBRARY_PATH=/media
-    volumes:
-      - media_downloads:/downloads
-      - media_library:/media
-    networks:
-      - media_network
-    depends_on:
-      - qbittorrent
-      - jellyfin
-
-  watchtower:
-    image: containrrr/watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 3600 --cleanup
-    networks:
-      - media_network
-
-  portainer:
-    image: portainer/portainer-ce:latest
-    ports:
-      - "9000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-    networks:
-      - media_network
-
   gluetun:
     image: qmcgaw/gluetun
     container_name: gluetun
@@ -76,8 +10,41 @@ services:
       - VPN_SERVICE_PROVIDER=mullvad
       - VPN_TYPE=wireguard
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - SERVER_CITIES=Jakarta
+      - SERVER_CITIES=singapore
+    volumes:
+      - ./gluetun:/gluetun
+    networks:
+      - media_network
+
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - WEBUI_PORT=8080
+    volumes:
+      - qbittorrent_config:/config
+      - media_downloads:/downloads
+
+  jellyfin:
+    image: jellyfin/jellyfin
+    ports:
+      - "8096:8096"
+    volumes:
+      - media_library:/media
+    networks:
+      - media_network
+
+  telegram-bot:
+    build: ./bot
+    environment:
+      - BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    volumes:
+      - media_downloads:/downloads
+      - media_library:/media
     networks:
       - media_network
 
@@ -85,10 +52,6 @@ volumes:
   qbittorrent_config:
   media_downloads:
   media_library:
-  jellyfin_config:
-  jellyfin_cache:
-  portainer_data:
 
 networks:
   media_network:
-    driver: bridge
