@@ -69,17 +69,23 @@ Proses otomatis akan:
 
 ### 📂 Struktur File
 ```bash
-.
+media-server-fly/
+├── docker-compose.yml
+├── bot/
+│   ├── Dockerfile
+│   ├── bot.py
+│   └── requirements.txt
 ├── config/
-│   ├── nginx/            # Reverse proxy config
-│   ├── jellyfin/         # Jellyfin config + SSL
-│   ├── sonarr/           # Sonarr config
-│   ├── radarr/           # Radarr config
-│   └── supervisord.conf  # Process manager
+│   ├── qBittorrent/
+│   │   └── qBittorrent.conf
+│   └── nginx/
+│       └── nginx.conf
 ├── scripts/
-│   ├── start.sh          # Init script
-│   └── send_keys.py      # Telegram notifier
-└── fly.toml              # Fly.io config
+│   ├── subtitle_download.sh
+│   └── organize_files.sh
+└── .github/
+    └── workflows/
+        └── deploy.yml
 ```
 
 ### 🌐 Custom Domain
