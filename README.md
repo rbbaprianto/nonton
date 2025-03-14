@@ -7,20 +7,19 @@
 
 ## 📂 Struktur File
 ```bash
-media-server-fly/
+media-server/
 ├── docker-compose.yml
+├── .env.prod
 ├── bot/
 │   ├── Dockerfile
 │   ├── bot.py
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── scripts/
+│       ├── subtitle.sh
+│       └── organizer.sh
 ├── config/
-│   ├── qBittorrent/
-│   │   └── qBittorrent.conf
-│   └── nginx/
-│       └── nginx.conf
-├── scripts/
-│   ├── subtitle_download.sh
-│   └── organize_files.sh
+│   ├── qbittorrent/
+│   └── jellyfin/
 └── .github/
     └── workflows/
         └── deploy.yml
