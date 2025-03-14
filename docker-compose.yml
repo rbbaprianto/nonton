@@ -1,57 +1,54 @@
 version: '3.8'
 
 services:
-  gluetun:
-    image: qmcgaw/gluetun
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - VPN_SERVICE_PROVIDER=mullvad
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_KEY}
-      - SERVER_CITIES=singapore
-    volumes:
-      - ./gluetun:/gluetun
-    networks:
-      - media_network
-
   qbittorrent:
-    image: linuxserver/qbittorrent
-    depends_on:
-      - gluetun
-    network_mode: "service:gluetun"
+    image: linuxserver/qbittorrent:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - qbit_config:/config
+      - media_downloads:/downloads
     environment:
+      - WEBUI_PORT=8080
       - PUID=1000
       - PGID=1000
-      - WEBUI_PORT=8080
-    volumes:
-      - qbittorrent_config:/config
-      - media_downloads:/downloads
+    networks:
+      - media_net
 
   jellyfin:
-    image: jellyfin/jellyfin
+    image: jellyfin/jellyfin:latest
     ports:
       - "8096:8096"
     volumes:
       - media_library:/media
+      - jellyfin_config:/config
     networks:
-      - media_network
+      - media_net
 
   telegram-bot:
     build: ./bot
     environment:
       - BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - QB_URL=http://qbittorrent:8080
     volumes:
       - media_downloads:/downloads
-      - media_library:/media
+      - media_library:/library
+    depends_on:
+      - qbittorrent
     networks:
-      - media_network
+      - media_net
+
+  cloudflared:
+    image: cloudflare/cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}
+    networks:
+      - media_net
 
 volumes:
-  qbittorrent_config:
+  qbit_config:
   media_downloads:
   media_library:
+  jellyfin_config:
 
 networks:
-  media_network:
+  media_net:
