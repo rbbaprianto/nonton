@@ -1,0 +1,6 @@
+<Config>
+  <Port>8096</Port>
+  <EnableHttps>false</EnableHttps>
+  <RequireHttps>false</RequireHttps>
+  <LocalNetworkAddresses>127.0.0.1</LocalNetworkAddresses>
+</Config>
