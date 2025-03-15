@@ -26,6 +26,8 @@ services:
     networks:
       - media_network
     restart: unless-stopped
+    ports:
+      - "8096:8096"
 
   telegram-bot:
     build:
@@ -73,3 +75,5 @@ networks:
 volumes:
   data:
   media:
+  qbittorrent_data:
+  jellyfin_data:

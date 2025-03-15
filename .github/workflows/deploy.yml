@@ -1,4 +1,4 @@
-name: Deploy Media Server
+name: Deploy Media Stack
 
 on:
   push:
@@ -8,19 +8,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup Fly
         uses: superfly/flyctl-actions/setup-flyctl@master
         with:
           flyctl-api-token: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only --dockerfile docker-compose.yml
+      - name: Deploy with Docker Compose
+        run: |
+          flyctl deploy --remote-only \
+            --dockerfile docker-compose.yml \
+            --volume media_storage:1gb
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          QB_USER: ${{ secrets.QB_USER }}
-          QB_PASS: ${{ secrets.QB_PASS }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
