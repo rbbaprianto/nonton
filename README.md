@@ -8,32 +8,7 @@
 **Nonton** adalah platform media server lengkap untuk streaming, manajemen konten, dan otomasi unduhan.  
 Dibangun menggunakan **Docker** dan dideploy ke **Fly.io** dengan sistem keamanan yang solid.
 
-🔗 **Demo Live**: [nonton.fly.dev](https://nonton.fly.dev) *(akses terbatas)*
-
-## 🌟 Fitur Utama
-
-### 🎥 Media Management
-- **Jellyfin** → Media server dengan hardware acceleration  
-- **Sonarr** → Otomasi manajemen serial TV  
-- **Radarr** → Otomasi manajemen film  
-- **Bazarr** → Manajemen subtitle otomatis  
-- **File Browser** → Pengelolaan file berbasis web  
-
-### 📥 Download Management
-- **qBittorrent** → Torrent client dengan WebUI  
-- **Aria2** → Download client multi-protokol  
-- **Prowlarr** → Indexer manager untuk *Arr stack  
-
-### 🔐 Monitoring & Security
-- **Tailscale** → VPN mesh untuk akses internal  
-- **Netdata** → Pemantauan sistem secara real-time  
-- **Uptime Kuma** → Monitoring uptime & status  
-- **Auto-Enkripsi** → API keys terenkripsi AES-256  
-
-### ⚙️ Otomasi
-- **GitHub Actions** → CI/CD pipeline otomatis  
-- **Telegram Bot** → Notifikasi real-time  
-- **Auto-Healing** → Restart layanan otomatis jika terjadi error  
+🔗 **Demo Live**: [nonton.fly.dev](https://nonton.fly.dev) *(akses terbatas)**
 
 ## 🚀 Cara Deploy
 
