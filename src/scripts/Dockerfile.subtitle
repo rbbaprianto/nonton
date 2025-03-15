@@ -1,0 +1,9 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN pip install subliminal==2.1.0 python-dotenv==1.0.0
+
+COPY subtitle.py .
+
+CMD ["python", "subtitle.py"]
