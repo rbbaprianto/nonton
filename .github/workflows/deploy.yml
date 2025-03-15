@@ -14,9 +14,15 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
         with:
           flyctl-api-token: ${{ secrets.FLY_API_TOKEN }}
-          
+
+      - name: Build Docker Image
+        run: flyctl docker build -t registry.fly.io/nonton:latest .
+      
+      - name: Push Docker Image
+        run: flyctl docker push registry.fly.io/nonton:latest
+      
       - name: Deploy
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --image registry.fly.io/nonton:latest
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}

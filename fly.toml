@@ -2,7 +2,8 @@ app = "nonton"
 primary_region = "sin"
 
 [build]
-  builder = "paketobuildpacks/builder:base"
+  builder = "dockerfile"
+  dockerfile = "docker-compose.yml"
 
 [http_service]
   internal_port = 8080
