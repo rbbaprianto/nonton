@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - WEBUI_PORTS=8080
+    volumes:
+      - ./data/qbittorrent:/config
+      - ./media:/media
+    networks:
+      - media_network
+    restart: unless-stopped
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    user: 1000:1000
+    volumes:
+      - ./data/jellyfin:/config
+      - ./media:/media
+    networks:
+      - media_network
+    restart: unless-stopped
+
+  telegram-bot:
+    build:
+      context: ./src/bot
+      dockerfile: Dockerfile
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - QB_URL=http://qbittorrent:8080
+      - QB_USER=${QB_USER}
+      - QB_PASS=${QB_PASS}
+    depends_on:
+      - qbittorrent
+    networks:
+      - media_network
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./docker/cloudflared/config.yml:/etc/cloudflared/config.yml
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - media_network
+    restart: unless-stopped
+
+  subtitle:
+    build:
+      context: ./src/scripts
+      dockerfile: Dockerfile.subtitle
+    volumes:
+      - ./media:/media
+    environment:
+      - OPENSUBTITLES_USER=${OPENSUBTITLES_USER}
+      - OPENSUBTITLES_PASS=${OPENSUBTITLES_PASS}
+    networks:
+      - media_network
+    restart: unless-stopped
+
+networks:
+  media_network:
+    driver: bridge
+
+volumes:
+  data:
+  media:
