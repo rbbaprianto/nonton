@@ -2,8 +2,8 @@ app = "nonton"
 primary_region = "sin"
 
 [build]
-  builder = "dockerfile"
   dockerfile = "docker-compose.yml"
+  builtin = "docker"
 
 [http_service]
   internal_port = 8080

@@ -1,4 +1,4 @@
-name: Deploy to Fly.io
+name: Deploy Media Server
 
 on:
   push:
@@ -8,26 +8,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Setup Fly
         uses: superfly/flyctl-actions/setup-flyctl@master
         with:
           flyctl-api-token: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Build Docker Image
-        run: flyctl docker build -t registry.fly.io/nonton:latest .
-      
-      - name: Push Docker Image
-        run: flyctl docker push registry.fly.io/nonton:latest
-      
-      - name: Deploy
-        run: flyctl deploy --remote-only --image registry.fly.io/nonton:latest
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only --dockerfile docker-compose.yml
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           QB_USER: ${{ secrets.QB_USER }}
           QB_PASS: ${{ secrets.QB_PASS }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
-          OPENSUBTITLES_USER: ${{ secrets.OPENSUBTITLES_USER }}
-          OPENSUBTITLES_PASS: ${{ secrets.OPENSUBTITLES_PASS }}
